@@ -1,0 +1,83 @@
+SET autocommit = 0;
+
+SET autocommit = 1;
+
+SELECT @@autocommit;
+
+# Inserir dados nas tabelas de editoras e assuntos ao mesmo tempo:
+
+START TRANSACTION;
+
+	INSERT INTO tbl_editoras(NomeEditora)
+
+	VALUES('teste');
+
+	INSERT INTO tbl_assuntos(Assunto)
+
+	VALUES('teste');
+
+COMMIT;
+
+# Inserir dados nas tabelas de editoras, assuntos e livros ao mesmo tempo:
+
+START TRANSACTION;
+
+	INSERT INTO tbl_editoras(NomeEditora)
+
+	VALUES('Bóson Ciências');
+
+	SELECT LAST_INSERT_ID() INTO @idEd;
+
+	INSERT INTO tbl_assuntos(Assunto)
+
+	VALUES('Ciências');
+
+	SELECT LAST_INSERT_ID() INTO @idAs;
+
+	INSERT INTO tbl_livros(NomeLivro,ISBN13,DataPub,PrecoLivro,NumeroPaginas,IdEditora,IdAssunto)
+
+	VALUES('Química na Cozinha','9786532145236','20210518',75.40,423,@idEd,@idAs);
+
+COMMIT;
+
+# idem anterior, mas usando procedimento armazenado:
+
+DELIMITER //
+
+CREATE PROCEDURE cadastra_AsEdLi(edit VARCHAR(50), assun VARCHAR(25), livro VARCHAR(70), isbn VARCHAR(13),
+publ DATE, preco DECIMAL, pag SMALLINT)
+BEGIN
+
+	START TRANSACTION;
+
+	INSERT INTO tbl_editoras(NomeEditora)
+
+	VALUES(edit);
+
+    	SELECT LAST_INSERT_ID() INTO @idEd;
+
+	INSERT INTO tbl_assuntos(Assunto)
+
+	VALUES(assun);
+
+    	SELECT LAST_INSERT_ID() INTO @idAs;
+
+    	INSERT INTO tbl_livros(NomeLivro,ISBN13,DataPub,PrecoLivro,NumeroPaginas,IdEditora,IdAssunto)
+
+    	VALUES(livro,isbn,publ,preco,pag,@idEd,@idAs);
+
+    COMMIT;
+
+END //
+
+DELIMITER ;
+
+CALL cadastra_AsEdLi('BioBóson','Biotech','Biotecnologia Geral','9786532123654','20210518',280.00,1320);
+
+
+
+SELECT * FROM tbl_editoras;
+
+SELECT * FROM tbl_assuntos;
+
+SELECT * FROM tbl_livros;
